@@ -9,6 +9,8 @@ A SQLAlchemy dialect for Dremio via ODBC and Flight interfaces.
    * [Installation](#installation)
       * [Pre-Requisites](#pre-requisites)
    * [Usage](#usage)
+      * [ODBC](#odbc)
+      * [Arrow Flight](#arrow-flight)
    * [Testing](#testing)
    * [Superset Integration](#superset-integration)
 <!--te-->
@@ -38,10 +40,23 @@ Debian:
 Usage
 ------------
 
+ODBC
+-------
 Connection String example:
 `dremio://user:password@host:port/dremio;SSL=0`
 
 You can specify other ODBC parameters seperated by semi colon.
+
+Arrow Flight
+------
+```diff
+- This is experiemental. Not recommended for production usage.
+```
+
+Connection String example:
+`dremio+flight://user:password@host:port/dremio`
+
+Refer https://github.com/dremio-hub/dremio-flight-connector for configuring flight endpoint in Dremio.
 
 Testing
 ------------
