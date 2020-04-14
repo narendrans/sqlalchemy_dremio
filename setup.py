@@ -10,7 +10,7 @@ with open('README.md') as readme_file:
 
 requirements = [
     'pyodbc>=4.0.17',
-    'sqlalchemy>=1.3.15',
+    'sqlalchemy>=1.2',
     'pyarrow'
 ]
 
@@ -22,7 +22,7 @@ test_requirements = [
 
 setup(
     name='sqlalchemy_dremio',
-    version='1.1.0',
+    version='1.1.1',
     description="A SQLAlchemy dialect for Dremio via the ODBC and Flight interface.",
     long_description=readme,
     long_description_content_type='text/markdown',
