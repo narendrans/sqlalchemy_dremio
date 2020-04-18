@@ -23,6 +23,11 @@ Installation
 Pre-Requisites
 --------------
 
+Mac OS X:
+
+* Unix ODBC: (brew install unixodbc)
+* Dremio ODBC Driver (https://download.dremio.com/odbc-driver/DremioODBC-LATEST.dmg)
+
 CentOS/RHEL:
 
 * Unix ODBC (sudo apt-get install -y unixODBC unixODBC-devel)
