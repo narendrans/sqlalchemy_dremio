@@ -1,11 +1,11 @@
-import pytest
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.dialects import registry
 import os
+from pathlib import Path
 
-from sqlalchemy.testing.schema import Table
+import pytest
+from sqlalchemy import create_engine
+import sqlalchemy.dialects
 
-registry.register("dremio", "sqlalchemy_dremio.pyodbc", "DremioDialect_pyodbc")
+sqlalchemy.dialects.registry.register("dremio", "sqlalchemy_dremio.pyodbc", "DremioDialect_pyodbc")
 
 
 def help():
@@ -20,7 +20,6 @@ def get_engine():
     """
     Creates a connection using the parameters defined in ODBC connect string
     """
-    print(os.environ['M2_HOME'])
     if not os.environ['DREMIO_CONNECTION_URL']:
         help()
         return
@@ -29,8 +28,8 @@ def get_engine():
 
 @pytest.fixture(scope='session', autouse=True)
 def init_test_schema(request):
-    print("inside init")
-    get_engine().execute(open('scripts\sample.sql').read())
+    test_sql = Path("scripts/sample.sql")
+    get_engine().execute(open(test_sql).read())
 
     def fin():
         get_engine().execute('DROP TABLE $scratch.sqlalchemy_tests')
