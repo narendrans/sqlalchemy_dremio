@@ -27,7 +27,7 @@ jobs:
         sudo alien dremio-odbc-LATEST.x86_64.rpm
         sudo dpkg -i dremio-odbc*.deb
         python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
+        pip install -r requirements_dev.txt
     - name: Test with pytest
       env:
         DREMIO_CONNECTION_URL: ${{ secrets.DREMIO_CONNECTION_URL }}
