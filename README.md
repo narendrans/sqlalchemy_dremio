@@ -1,7 +1,8 @@
 # SQLAlchemy Dremio
 
 
-![PyPI](https://img.shields.io/pypi/v/sqlalchemy_dremio.svg)
+![PyPI](https://img.shields.io/pypi/v/sqlalchemy_dremio.svg) 
+![Build](https://github.com/narendrans/sqlalchemy_dremio/workflows/Build/badge.svg)
 
 A SQLAlchemy dialect for Dremio via ODBC and Flight interfaces.
 
