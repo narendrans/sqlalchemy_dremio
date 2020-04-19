@@ -23,9 +23,9 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt install -y unixodbc-dev wget alien
-        wget https://download.dremio.com/odbc-driver/dremio-odbc-LATEST.x86_64.rpm
-        alien dremio-odbc-LATEST.x86_64.rpm
-        dpkg -i dremio-odbc*.deb
+        sudo wget https://download.dremio.com/odbc-driver/dremio-odbc-LATEST.x86_64.rpm
+        sudo alien dremio-odbc-LATEST.x86_64.rpm
+        sudo dpkg -i dremio-odbc*.deb
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
     - name: Test with pytest
