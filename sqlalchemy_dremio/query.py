@@ -26,6 +26,7 @@ _type_map = {
     'int64': types.BIGINT,
     'time': types.TIME,
     'TIME': types.TIME,
+    'datetime64[ns]': types.DATETIME,
     'timestamp': types.TIMESTAMP,
     'TIMESTAMP': types.TIMESTAMP,
     'varchar': types.VARCHAR,
