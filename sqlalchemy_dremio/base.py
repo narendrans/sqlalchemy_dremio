@@ -192,10 +192,12 @@ class DremioDialect(default.DefaultDialect):
     @reflection.cache
     def get_table_names(self, connection, schema, **kw):
         sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES"'
+        params = {}
         if schema is not None:
-            sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.\"TABLES\" WHERE TABLE_SCHEMA = '" + schema + "'"
+            params["schema"] = schema
+            sql += " WHERE TABLE_SCHEMA = :schema"
 
-        result = connection.execute(sql)
+        result = connection.execute(sql, **params)
         table_names = [r[0] for r in result]
         return table_names
 
@@ -203,3 +205,6 @@ class DremioDialect(default.DefaultDialect):
         result = connection.execute("SHOW SCHEMAS")
         schema_names = [r[0] for r in result]
         return schema_names
+
+    def get_view_names(self, connection, schema=None, **kwargs):
+        return []
