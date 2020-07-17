@@ -192,12 +192,12 @@ class DremioDialect(default.DefaultDialect):
     @reflection.cache
     def get_table_names(self, connection, schema, **kw):
         sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES"'
-        params = {}
+        
+        # Reverting #5 as Dremio does not support parameterized queries.
         if schema is not None:
-            params["schema"] = schema
-            sql += " WHERE TABLE_SCHEMA = :schema"
+            sql += " WHERE TABLE_SCHEMA = '" + schema + "'"
 
-        result = connection.execute(sql, **params)
+        result = connection.execute(sql)
         table_names = [r[0] for r in result]
         return table_names
 
