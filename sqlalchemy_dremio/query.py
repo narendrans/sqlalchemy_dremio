@@ -14,21 +14,17 @@ def run_query(query, flightclient=None):
             batches.append(batch)
         except StopIteration:
             break
-    # TODO Naren: Coverting to dataframe seems uncessary
 
-    data = pa.Table.from_batches(batches)
-    df = data.to_pandas()
-
-    return df
+    return pa.Table.from_batches(batches)
 
 
 def execute(query, flightclient=None):
-    df = run_query(query, flightclient)
+    data = run_query(query, flightclient)
 
     result = []
 
-    for x, y in df.dtypes.to_dict().items():
-        o = (x, _type_map[str(y.name)], None, None, True)
+    for x in data.schema:
+        o = (x.name, _type_map[str(x.type)], None, None, True)
         result.append(o)
 
-    return df.values.tolist(), result
+    return list(data.to_pydict().values()), result
