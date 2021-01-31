@@ -31,13 +31,13 @@ Mac OS X:
 
 CentOS/RHEL:
 
-* Unix ODBC (sudo apt-get install -y unixODBC unixODBC-devel)
+* Unix ODBC (sudo yum apt-get install -y unixODBC unixODBC-devel)
 * PyODBC (pip install pyodbc)
 * Dremio ODBC Driver (https://download.dremio.com/odbc-driver/dremio-odbc-LATEST.x86_64.rpm)
 
 Debian:
 
-* Unix ODBC (sudo yum install -y unixodbc unixodbc-dev)
+* Unix ODBC (sudo apt install -y unixodbc unixodbc-dev)
 * PyODBC (pip install pyodbc)
 * Dremio ODBC Driver (https://download.dremio.com/odbc-driver/dremio-odbc-LATEST.x86_64.rpm)
 
@@ -55,14 +55,11 @@ You can specify other ODBC parameters seperated by semi colon.
 
 Arrow Flight
 ------
-```diff
-- This is experiemental. Not recommended for production usage.
-```
 
 Connection String example:
 `dremio+flight://user:password@host:port/dremio`
 
-Refer https://github.com/dremio-hub/dremio-flight-connector for configuring flight endpoint in Dremio.
+Refer http://docs.dremio.com/drivers/arrow-flight.html for configuring flight endpoint in Dremio. Superset uses an older version of Apache Arrow due to which you will need to enable legacy auth in Dremio if you want to use flight connection. Add `services.flight.auth.mode: "legacy.arrow.flight.auth"` to dremio.conf to enable this.
 
 Testing
 ------------
@@ -82,4 +79,4 @@ And then run:
 Superset Integration
 -------------
 
-This SQLAlchemy can be used for connecting Dremio with Superset. Please check superset website for more instructions on the setup.
+This SQLAlchemy can be used for connecting Dremio with Superset. Please check https://superset.apache.org/docs/databases/dremio for more instructions on the setup.
