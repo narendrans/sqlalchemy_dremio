@@ -22,7 +22,7 @@ test_requirements = [
 
 setup(
     name='sqlalchemy_dremio',
-    version='1.1.3',
+    version='1.1.6',
     description="A SQLAlchemy dialect for Dremio via the ODBC and Flight interface.",
     long_description=readme,
     long_description_content_type='text/markdown',

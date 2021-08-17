@@ -4,8 +4,6 @@ from sqlalchemy import schema, types, pool
 from sqlalchemy.engine import default, reflection
 from sqlalchemy.sql import compiler
 
-from pyarrow.flight import BasicAuth, ClientAuthHandler
-
 _type_map = {
     'boolean': types.BOOLEAN,
     'BOOLEAN': types.BOOLEAN,
@@ -15,7 +13,6 @@ _type_map = {
     'DATE': types.DATE,
     'float': types.FLOAT,
     'FLOAT': types.FLOAT,
-    'float64': types.FLOAT,
     'decimal': types.DECIMAL,
     'DECIMAL': types.DECIMAL,
     'double': types.FLOAT,
@@ -24,38 +21,21 @@ _type_map = {
     'INTERVAL': types.Interval,
     'int': types.INTEGER,
     'INT': types.INTEGER,
-    'int32': types.INTEGER,
-    'int64': types.BIGINT,
     'integer': types.INTEGER,
     'INTEGER': types.INTEGER,
     'bigint': types.BIGINT,
     'BIGINT': types.BIGINT,
     'time': types.TIME,
     'TIME': types.TIME,
-    'datetime64[ns]': types.DATETIME,
     'timestamp': types.TIMESTAMP,
     'TIMESTAMP': types.TIMESTAMP,
     'varchar': types.VARCHAR,
     'VARCHAR': types.VARCHAR,
     'smallint': types.SMALLINT,
     'CHARACTER VARYING': types.VARCHAR,
-    'ANY': types.VARCHAR,
-    'object': types.VARCHAR
+    'ANY': types.VARCHAR
 }
 
-class HttpDremioClientAuthHandler(ClientAuthHandler):
-    def __init__(self, username, password):
-        super(ClientAuthHandler, self).__init__()
-        self.basic_auth = BasicAuth(username, password)
-        self.token = None
-
-    def authenticate(self, outgoing, incoming):
-        auth = self.basic_auth.serialize()
-        outgoing.write(auth)
-        self.token = incoming.read()
-
-    def get_token(self):
-        return self.token
 
 class DremioExecutionContext(default.DefaultExecutionContext):
     pass
