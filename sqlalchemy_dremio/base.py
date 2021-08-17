@@ -46,7 +46,7 @@ class DremioCompiler(compiler.SQLCompiler):
     def visit_table(self, table, asfrom=False, **kwargs):
 
         if asfrom:
-            if table.schema != "":
+            if table.schema != None and table.schema != "":
                 fixed_schema = ".".join(["\"" + i.replace('"', '') + "\"" for i in table.schema.split(".")])
                 fixed_table = fixed_schema + ".\"" + table.name.replace("\"", "") + "\""
             else:
@@ -173,7 +173,9 @@ class DremioDialect(default.DefaultDialect):
         return []
 
     def get_columns(self, connection, table_name, schema, **kw):
-        q = "DESCRIBE \"{0}\".\"{1}\"".format(schema, table_name)
+        q = "DESCRIBE \"{1}\"".format(schema, table_name)
+        if schema != None and schema != "":
+            q = "DESCRIBE \"{0}\".\"{1}\"".format(schema, table_name)
         cursor = connection.execute(q)
         result = []
         for col in cursor:
@@ -192,7 +194,7 @@ class DremioDialect(default.DefaultDialect):
     @reflection.cache
     def get_table_names(self, connection, schema, **kw):
         sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES"'
-        
+
         # Reverting #5 as Dremio does not support parameterized queries.
         if schema is not None:
             sql += " WHERE TABLE_SCHEMA = '" + schema + "'"
