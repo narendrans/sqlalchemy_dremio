@@ -8,7 +8,7 @@ import logging
 from pyarrow import flight
 
 from sqlalchemy_dremio.exceptions import Error, NotSupportedError
-from sqlalchemy_dremio.flight import HttpDremioClientAuthHandler
+from sqlalchemy_dremio.flight_auth import HttpDremioClientAuthHandler
 from sqlalchemy_dremio.query import execute
 
 logger = logging.getLogger(__name__)

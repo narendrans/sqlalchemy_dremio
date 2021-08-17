@@ -1,7 +1,7 @@
 # SQLAlchemy Dremio
 
 
-![PyPI](https://img.shields.io/pypi/v/sqlalchemy_dremio.svg) 
+![PyPI](https://img.shields.io/pypi/v/sqlalchemy_dremio.svg)
 ![Build](https://github.com/narendrans/sqlalchemy_dremio/workflows/Build/badge.svg)
 
 A SQLAlchemy dialect for Dremio via ODBC and Flight interfaces.
@@ -55,11 +55,14 @@ You can specify other ODBC parameters seperated by semi colon.
 
 Arrow Flight
 ------
+```diff
+- This is experiemental. Not recommended for production usage.
+```
 
 Connection String example:
 `dremio+flight://user:password@host:port/dremio`
 
-Refer http://docs.dremio.com/drivers/arrow-flight.html for configuring flight endpoint in Dremio. Superset uses an older version of Apache Arrow due to which you will need to enable legacy auth in Dremio if you want to use flight connection. Add `services.flight.auth.mode: "legacy.arrow.flight.auth"` to dremio.conf to enable this.
+Refer https://github.com/dremio-hub/dremio-flight-connector for configuring flight endpoint in Dremio.
 
 Testing
 ------------
@@ -79,4 +82,4 @@ And then run:
 Superset Integration
 -------------
 
-This SQLAlchemy can be used for connecting Dremio with Superset. Please check https://superset.apache.org/docs/databases/dremio for more instructions on the setup.
+This SQLAlchemy can be used for connecting Dremio with Superset. Please check superset website for more instructions on the setup.
