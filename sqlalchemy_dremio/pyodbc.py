@@ -2,8 +2,7 @@ import platform
 
 from sqlalchemy.connectors.pyodbc import PyODBCConnector
 
-from .base import DremioExecutionContext, DremioDialect
-
+from .base import DremioExecutionContext, DremioDialect, _type_map
 
 class DremioExecutionContext_pyodbc(DremioExecutionContext):
     pass
@@ -32,3 +31,8 @@ class DremioDialect_pyodbc(PyODBCConnector, DremioDialect):
                       ]
 
         return [[";".join(connectors)], connect_args]
+
+
+dialect = DremioDialect_pyodbc
+# some tools like "Great Expectations" use this to find the types on root level.
+locals().update(_type_map)
