@@ -22,14 +22,17 @@ class DremioDialect_pyodbc(PyODBCConnector, DremioDialect):
         opts = url.translate_connect_args(username='user')
 
         connect_args = {}
+        schemaName = opts['database'] if 'database' in opts else ""
         connectors = ["DRIVER={%s}" % self.pyodbc_driver_name,
                       "UID=%s" % opts['user'],
                       "PWD=%s" % opts['password'],
                       'HOST=%s' % opts['host'],
                       'PORT=%s' % opts['port'],
-                      'Schema=%s' % opts['database']
+                      'Schema=%s' % schemaName
                       ]
 
+        if 'filter_schema_names' in url.query:
+            self.filter_schema_names = url.query['filter_schema_names'].split(',')
         return [[";".join(connectors)], connect_args]
 
 

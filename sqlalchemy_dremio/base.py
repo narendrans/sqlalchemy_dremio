@@ -148,6 +148,7 @@ class DremioDialect(default.DefaultDialect):
     preparer = DremioIdentifierPreparer
     execution_ctx_cls = DremioExecutionContext
     default_paramstyle = "qmark"
+    filter_schema_names = []
 
     @classmethod
     def dbapi(cls):
@@ -205,13 +206,8 @@ class DremioDialect(default.DefaultDialect):
         return table_names
 
     def get_schema_names(self, connection, schema=None, **kw):
-        database = connection.engine.url.database
-        if database != None and ';' in database:
-            database = database.split(';')[0]
-        # This is only returning the database from connection string.
-        # If you want to get all databases, don't pass a database name.
-        if database != None and database != "":
-            return [database]
+        if len(self.filter_schema_names) > 0:
+            return self.filter_schema_names
 
         result = connection.execute("SHOW SCHEMAS")
         schema_names = [r[0] for r in result]
