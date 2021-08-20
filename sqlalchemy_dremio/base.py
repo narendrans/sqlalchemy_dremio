@@ -213,6 +213,16 @@ class DremioDialect(default.DefaultDialect):
         schema_names = [r[0] for r in result]
         return schema_names
 
+    @reflection.cache
+    def has_table(self, connection, table_name, schema=None, **kw):
+        sql = 'SELECT COUNT(*) FROM INFORMATION_SCHEMA."TABLES"'
+        sql += " WHERE TABLE_NAME = '" + str(table_name) + "'"
+        if schema is not None and schema != "":
+            sql += " AND TABLE_SCHEMA = '" + str(schema) + "'"
+        result = connection.execute(sql)
+        countRows = [r[0] for r in result]
+        return countRows[0] > 0
+
     def get_view_names(self, connection, schema=None, **kwargs):
         return []
 
