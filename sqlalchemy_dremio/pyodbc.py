@@ -2,8 +2,7 @@ import platform
 
 from sqlalchemy.connectors.pyodbc import PyODBCConnector
 
-from .base import DremioExecutionContext, DremioDialect
-
+from .base import DremioExecutionContext, DremioDialect, _type_map
 
 class DremioExecutionContext_pyodbc(DremioExecutionContext):
     pass
@@ -23,12 +22,20 @@ class DremioDialect_pyodbc(PyODBCConnector, DremioDialect):
         opts = url.translate_connect_args(username='user')
 
         connect_args = {}
+        schemaName = opts['database'] if 'database' in opts else ""
         connectors = ["DRIVER={%s}" % self.pyodbc_driver_name,
                       "UID=%s" % opts['user'],
                       "PWD=%s" % opts['password'],
                       'HOST=%s' % opts['host'],
                       'PORT=%s' % opts['port'],
-                      'Schema=%s' % opts['database']
+                      'Schema=%s' % schemaName
                       ]
 
+        if 'filter_schema_names' in url.query:
+            self.filter_schema_names = url.query['filter_schema_names'].split(',')
         return [[";".join(connectors)], connect_args]
+
+
+dialect = DremioDialect_pyodbc
+# some tools like "Great Expectations" use this to find the types on root level.
+locals().update(_type_map)

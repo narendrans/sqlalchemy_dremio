@@ -147,6 +147,8 @@ class DremioDialect(default.DefaultDialect):
     ddl_compiler = DremioDDLCompiler
     preparer = DremioIdentifierPreparer
     execution_ctx_cls = DremioExecutionContext
+    default_paramstyle = "qmark"
+    filter_schema_names = []
 
     @classmethod
     def dbapi(cls):
@@ -173,10 +175,10 @@ class DremioDialect(default.DefaultDialect):
         return []
 
     def get_columns(self, connection, table_name, schema, **kw):
-        q = "DESCRIBE \"{1}\"".format(schema, table_name)
+        sql = "DESCRIBE \"{0}\"".format(table_name)
         if schema != None and schema != "":
-            q = "DESCRIBE \"{0}\".\"{1}\"".format(schema, table_name)
-        cursor = connection.execute(q)
+            sql = "DESCRIBE \"{0}\".\"{1}\"".format(schema, table_name)
+        cursor = connection.execute(sql)
         result = []
         for col in cursor:
             cname = col[0]
@@ -204,9 +206,37 @@ class DremioDialect(default.DefaultDialect):
         return table_names
 
     def get_schema_names(self, connection, schema=None, **kw):
+        if len(self.filter_schema_names) > 0:
+            return self.filter_schema_names
+
         result = connection.execute("SHOW SCHEMAS")
         schema_names = [r[0] for r in result]
         return schema_names
 
+    @reflection.cache
+    def has_table(self, connection, table_name, schema=None, **kw):
+        sql = 'SELECT COUNT(*) FROM INFORMATION_SCHEMA."TABLES"'
+        sql += " WHERE TABLE_NAME = '" + str(table_name) + "'"
+        if schema is not None and schema != "":
+            sql += " AND TABLE_SCHEMA = '" + str(schema) + "'"
+        result = connection.execute(sql)
+        countRows = [r[0] for r in result]
+        return countRows[0] > 0
+
     def get_view_names(self, connection, schema=None, **kwargs):
         return []
+
+    # Workaround since Dremio does not support parameterized stmts
+    # Old queries should not have used queries with parameters, since Dremio does not support it
+    # and these queries failed. If there is no parameter, everything should work as before.
+    def do_execute(self, cursor, statement, parameters, context):
+        replaced_stmt = statement
+        for v in parameters:
+            if isinstance(v, (int, float)):
+                replaced_stmt = replaced_stmt.replace('?', str(v), 1)
+            else:
+                replaced_stmt = replaced_stmt.replace('?', "'" + str(v) + "'", 1)
+
+        super(DremioDialect, self).do_execute_no_params(
+            cursor, replaced_stmt, context
+        )

@@ -42,3 +42,16 @@ def test_simple_sql():
 def test_row_count(engine):
     rows = conftest.get_engine().execute('SELECT * FROM $scratch.sqlalchemy_tests').fetchall()
     assert len(rows) is 2
+
+def test_has_table_True():
+    assert conftest.get_engine().has_table("version", schema = "sys")
+
+def test_has_table_True2():
+    assert conftest.get_engine().has_table("version")
+
+def test_has_table_False():
+    assert not conftest.get_engine().has_table("does_not_exist", schema = "sys")
+
+def test_has_table_False2():
+    assert not conftest.get_engine().has_table("does_not_exist")
+
