@@ -50,7 +50,9 @@ class DremioCompiler(compiler.SQLCompiler):
                 fixed_schema = ".".join(["\"" + i.replace('"', '') + "\"" for i in table.schema.split(".")])
                 fixed_table = fixed_schema + ".\"" + table.name.replace("\"", "") + "\""
             else:
-                fixed_table = "\"" + table.name.replace("\"", "") + "\""
+                # don't change anything. expect a fully and properly qualified path if no schema is passed.
+                fixed_table = table.name
+                # fixed_table = "\"" + table.name.replace("\"", "") + "\""
             return fixed_table
         else:
             return ""
@@ -232,10 +234,11 @@ class DremioDialect(default.DefaultDialect):
     def do_execute(self, cursor, statement, parameters, context):
         replaced_stmt = statement
         for v in parameters:
+            escaped_str = str(v).replace("'", "''")
             if isinstance(v, (int, float)):
-                replaced_stmt = replaced_stmt.replace('?', str(v), 1)
+                replaced_stmt = replaced_stmt.replace('?', escaped_str, 1)
             else:
-                replaced_stmt = replaced_stmt.replace('?', "'" + str(v) + "'", 1)
+                replaced_stmt = replaced_stmt.replace('?', "'" + escaped_str + "'", 1)
 
         super(DremioDialect, self).do_execute_no_params(
             cursor, replaced_stmt, context
