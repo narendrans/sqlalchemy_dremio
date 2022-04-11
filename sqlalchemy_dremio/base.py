@@ -34,7 +34,8 @@ _type_map = {
     'ANY': types.VARCHAR,
     
     'ARRAY': types.ARRAY,
-    'ROW': types.JSON
+    'ROW': types.JSON,
+    'BINARY VARYING': types.LargeBinary,
 }
 
 
