@@ -31,7 +31,11 @@ _type_map = {
     'VARCHAR': types.VARCHAR,
     'smallint': types.SMALLINT,
     'CHARACTER VARYING': types.VARCHAR,
-    'ANY': types.VARCHAR
+    'ANY': types.VARCHAR,
+    
+    'ARRAY': types.ARRAY,
+    'ROW': types.JSON,
+    'BINARY VARYING': types.LargeBinary,
 }
 
 
