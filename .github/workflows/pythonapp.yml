@@ -22,11 +22,6 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
-        sudo apt install -y unixodbc-dev wget alien
-        sudo wget https://download.dremio.com/odbc-driver/dremio-odbc-LATEST.x86_64.rpm
-        sudo alien dremio-odbc-LATEST.x86_64.rpm
-        sudo dpkg -i dremio-odbc*.deb
-        python -m pip install --upgrade pip
         pip install -r requirements_dev.txt
     - name: Test with pytest
       env:
