@@ -37,9 +37,9 @@ _type_map = {
 }
 
 
-def run_query(query, flightclient=None):
-    info = flightclient.get_flight_info(flight.FlightDescriptor.for_command(query))
-    reader = flightclient.do_get(info.endpoints[0].ticket)
+def run_query(query, flightclient=None, options=None):
+    info = flightclient.get_flight_info(flight.FlightDescriptor.for_command(query), options)
+    reader = flightclient.do_get(info.endpoints[0].ticket, options)
 
     batches = []
     while True:
@@ -56,8 +56,8 @@ def run_query(query, flightclient=None):
     return df
 
 
-def execute(query, flightclient=None):
-    df = run_query(query, flightclient)
+def execute(query, flightclient=None, options=None):
+    df = run_query(query, flightclient, options)
 
     result = []
 

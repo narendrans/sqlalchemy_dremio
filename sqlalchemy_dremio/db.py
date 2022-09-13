@@ -8,7 +8,7 @@ import logging
 from pyarrow import flight
 
 from sqlalchemy_dremio.exceptions import Error, NotSupportedError
-from sqlalchemy_dremio.flight_auth import HttpDremioClientAuthHandler
+from sqlalchemy_dremio.flight_auth import ClientAuthMiddleware
 from sqlalchemy_dremio.query import execute
 
 logger = logging.getLogger(__name__)
@@ -49,10 +49,24 @@ class Connection(object):
         # TODO: Find a better way to extend to addition flight parameters
 
         splits = connection_string.split(";")
-        client = flight.FlightClient('grpc+tcp://{0}:{1}'.format(splits[2].split("=")[1], splits[3].split("=")[1]))
-        client.authenticate(HttpDremioClientAuthHandler(splits[0].split("=")[1], splits[1].split("=")[1]))
+        properties = []
+        for kvpair in splits:
+            kv = kvpair.split("=")
+            properties[kv[0]] = kv[1]
+
+        client = flight.FlightClient('grpc+tcp://{0}:{1}'.format(properties['HOST'], properties['PORT']))
+        headers = []
+        if properties['UID'] is not None:
+            bearer_token = client.authenticate_basic_token(properties['UID'], properties['PASSWORD'])
+            headers.append(bearer_token)
+        else:
+            headers.append((b'authorization', "Bearer {}".format(properties['Token']).encode('utf-8')))
+
+        if properties['Schema'] is not None:
+            headers.append(b'schema', properties['Schema'].encode('utf-8'))
 
         self.flightclient = client
+        self.options = flight.FlightCallOptions(headers=headers)
 
         self.closed = False
         self.cursors = []
@@ -78,7 +92,7 @@ class Connection(object):
     @check_closed
     def cursor(self):
         """Return a new Cursor Object using the connection."""
-        cursor = Cursor(self.flightclient)
+        cursor = Cursor(self.flightclient, self.options)
         self.cursors.append(cursor)
 
         return cursor
@@ -99,8 +113,9 @@ class Connection(object):
 class Cursor(object):
     """Connection cursor."""
 
-    def __init__(self, flightclient=None):
+    def __init__(self, flightclient=None, options=None):
         self.flightclient = flightclient
+        self.options = options
 
         # This read/write attribute specifies the number of rows to fetch at a
         # time with .fetchmany(). It defaults to 1 meaning to fetch a single
@@ -130,7 +145,7 @@ class Cursor(object):
     def execute(self, query, params=None):
         self.description = None
         self._results, self.description = execute(
-            query, self.flightclient)
+            query, self.flightclient, self.options)
         return self
 
     @check_closed
