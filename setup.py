@@ -9,9 +9,8 @@ with open('README.md') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'pyodbc>=4.0.17',
-    'sqlalchemy>=1.2',
-    'pyarrow'
+    'sqlalchemy>=1.3.24',
+    'pyarrow>=5.0.0'
 ]
 
 setup_requirements = [
@@ -22,8 +21,8 @@ test_requirements = [
 
 setup(
     name='sqlalchemy_dremio',
-    version='1.2.1',
-    description="A SQLAlchemy dialect for Dremio via the ODBC and Flight interface.",
+    version='2.0.0',
+    description="A SQLAlchemy dialect for Dremio via the Flight interface.",
     long_description=readme,
     long_description_content_type='text/markdown',
     author="Naren",
@@ -32,7 +31,6 @@ setup(
     packages=find_packages(include=['sqlalchemy_dremio']),
     entry_points={
         'sqlalchemy.dialects': [
-            'dremio = sqlalchemy_dremio.pyodbc:DremioDialect_pyodbc',
             'dremio.flight = sqlalchemy_dremio.flight:DremioDialect_flight',
         ]
     },

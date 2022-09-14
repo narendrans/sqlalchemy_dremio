@@ -163,8 +163,7 @@ class DremioDialect_flight(default.DefaultDialect):
                       "PWD=%s" % opts['password'],
                       'HOST=%s' % opts['host'],
                       'PORT=%s' % opts['port'],
-                      'Schema=%s' % opts['database'],
-                      'Token=%s' % opts['token']
+                      'Schema=%s' % opts['database']
                       ]
         return [[";".join(connectors)], connect_args]
 
