@@ -49,21 +49,23 @@ class Connection(object):
         # TODO: Find a better way to extend to addition flight parameters
 
         splits = connection_string.split(";")
-        properties = []
+        properties = {}
+        print(splits)
         for kvpair in splits:
             kv = kvpair.split("=")
+            print(kv)
             properties[kv[0]] = kv[1]
 
         client = flight.FlightClient('grpc+tcp://{0}:{1}'.format(properties['HOST'], properties['PORT']))
         headers = []
         if properties['UID'] is not None:
-            bearer_token = client.authenticate_basic_token(properties['UID'], properties['PASSWORD'])
+            bearer_token = client.authenticate_basic_token(properties['UID'], properties['PWD'])
             headers.append(bearer_token)
         else:
             headers.append((b'authorization', "Bearer {}".format(properties['Token']).encode('utf-8')))
 
         if properties['Schema'] is not None:
-            headers.append(b'schema', properties['Schema'].encode('utf-8'))
+            headers.append((b'schema', properties['Schema'].encode('utf-8')))
 
         self.flightclient = client
         self.options = flight.FlightCallOptions(headers=headers)

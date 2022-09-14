@@ -52,7 +52,6 @@ def run_query(query, flightclient=None, options=None):
             batches.append(batch)
         except StopIteration:
             break
-    # TODO Naren: Coverting to dataframe seems uncessary
 
     data = pa.Table.from_batches(batches)
     df = data.to_pandas()
