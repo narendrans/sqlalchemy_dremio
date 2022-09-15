@@ -11,11 +11,13 @@ from pyarrow import flight
 _type_map = {
     'boolean': types.BOOLEAN,
     'BOOLEAN': types.BOOLEAN,
+    'bool': types.BOOLEAN,
     'varbinary': types.LargeBinary,
     'VARBINARY': types.LargeBinary,
     'date': types.DATE,
     'DATE': types.DATE,
     'float64': types.FLOAT,
+    'float32': types.FLOAT,
     'decimal': types.DECIMAL,
     'DECIMAL': types.DECIMAL,
     'double': types.FLOAT,
