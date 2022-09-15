@@ -46,14 +46,12 @@ def check_result(f):
 class Connection(object):
 
     def __init__(self, connection_string):
-        # TODO: Find a better way to extend to addition flight parameters
 
         splits = connection_string.split(";")
         properties = {}
-        print(splits)
+
         for kvpair in splits:
             kv = kvpair.split("=")
-            print(kv)
             properties[kv[0]] = kv[1]
 
         client = flight.FlightClient('grpc+tcp://{0}:{1}'.format(properties['HOST'], properties['PORT']))

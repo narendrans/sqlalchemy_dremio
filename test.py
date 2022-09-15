@@ -1,10 +1,12 @@
 from sqlalchemy import create_engine
 import time
 
+
 db_uri = "dremio+flight://dremio:dremio123@localhost:32010/dremio;SSL=0"
 engine = create_engine(db_uri)
-sql = 'SELECT * FROM sys.optons -- SQL Alchemy Flight Test '
+sql = 'SELECT * FROM sys.options limit 5 -- SQL Alchemy Flight Test '
 
-start = time.process_time()
 result = engine.execute(sql)
-print(time.process_time() - start)
+
+for row in result:
+    print(row[0])
