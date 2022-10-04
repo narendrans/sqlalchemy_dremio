@@ -8,7 +8,7 @@ import logging
 from pyarrow import flight
 
 from sqlalchemy_dremio.exceptions import Error, NotSupportedError
-from sqlalchemy_dremio.flight_auth import ClientAuthMiddleware
+from sqlalchemy_dremio.flight_middleware import CookieMiddlewareFactory
 from sqlalchemy_dremio.query import execute
 
 logger = logging.getLogger(__name__)
@@ -47,23 +47,56 @@ class Connection(object):
 
     def __init__(self, connection_string):
 
-        splits = connection_string.split(";")
+        # Build a map from the connection string supplied using the SQLAlchemy URI
+        # and supplied properties. The format is generated from DremioDialect_flight.create_connect_args()
+        # and is a semi-colon delimited string of key=value pairs. Note that the value itself can
+        # contain equal signs.
         properties = {}
+        splits = connection_string.split(";")
 
         for kvpair in splits:
-            kv = kvpair.split("=")
+            kv = kvpair.split("=",1)
             properties[kv[0]] = kv[1]
 
-        client = flight.FlightClient('grpc+tcp://{0}:{1}'.format(properties['HOST'], properties['PORT']))
+        connection_args = {}
+
+        # Connect to the server endpoint with an encrypted TLS connection by default.
+        protocol = 'tls'
+        if 'UseEncryption' in properties and properties['UseEncryption'].lower() == 'false':
+            protocol = 'tcp'
+        else:
+            # Specify the trusted certificates
+            connection_args['disable_server_verification'] = False
+            if 'TrustedCerts' in properties:
+                with open(properties['TrustedCerts'] , "rb") as root_certs:
+                    connection_args["tls_root_certs"] = root_certs.read()
+            # Or disable server verification entirely
+            elif 'DisableServerVerification' in properties and properties['DisableServerVerification'].lower() == 'true':
+                connection_args['disable_server_verification'] = True
+
+        # Enabling cookie middleware for stateful connectivity.
+        client_cookie_middleware = CookieMiddlewareFactory()
+
+        client = flight.FlightClient('grpc+{0}://{1}:{2}'.format(protocol, properties['HOST'], properties['PORT']),
+            middleware=[client_cookie_middleware], **connection_args)
+        
+        # Authenticate either using basic username/password or using the Token parameter.
         headers = []
-        if properties['UID'] is not None:
+        if 'UID' in properties:
             bearer_token = client.authenticate_basic_token(properties['UID'], properties['PWD'])
             headers.append(bearer_token)
         else:
             headers.append((b'authorization', "Bearer {}".format(properties['Token']).encode('utf-8')))
 
-        if properties['Schema'] is not None:
-            headers.append((b'schema', properties['Schema'].encode('utf-8')))
+        # Propagate Dremio-specific headers.
+        def add_header(properties, headers, header_name):
+            if header_name in properties:
+                headers.append((header_name.lower().encode('utf-8'), properties[header_name].encode('utf-8')))
+
+        add_header(properties, headers, 'Schema')
+        add_header(properties, headers, 'routing_queue')
+        add_header(properties, headers, 'routing_tag')
+        add_header(properties, headers, 'quoting')
 
         self.flightclient = client
         self.options = flight.FlightCallOptions(headers=headers)

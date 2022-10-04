@@ -159,12 +159,28 @@ class DremioDialect_flight(default.DefaultDialect):
     def create_connect_args(self, url):
         opts = url.translate_connect_args(username='user')
         connect_args = {}
-        connectors = ["UID=%s" % opts['user'],
-                      "PWD=%s" % opts['password'],
-                      'HOST=%s' % opts['host'],
-                      'PORT=%s' % opts['port'],
-                      'Schema=%s' % opts['database']
-                      ]
+        connectors = ['HOST=%s' % opts['host'],
+                      'PORT=%s' % opts['port']]
+
+        if 'user' in opts:
+            connectors.append('{0}={1}'.format('UID', opts['user']))
+            connectors.append('{0}={1}'.format('PWD', opts['password']))
+
+        if 'database' in opts:
+            connectors.append('{0}={1}'.format('Schema', opts['database']))
+
+        def add_property(url, property_name, connectors):
+            if property_name in url.query:
+                connectors.append('{0}={1}'.format(property_name, url.query[property_name]))
+        
+        add_property(url, 'UseEncryption', connectors)
+        add_property(url, 'DisableCertificateVerification', connectors)
+        add_property(url, 'TrustedCerts', connectors)
+        add_property(url, 'routing_queue', connectors)
+        add_property(url, 'routing_tag', connectors)
+        add_property(url, 'quoting', connectors)
+        add_property(url, 'token', connectors)
+
         return [[";".join(connectors)], connect_args]
 
     @classmethod
