@@ -18,6 +18,9 @@ Installation
 
 `pip install sqlalchemy_dremio`
 
+To install from source:
+`python setup.py install`
+
 Usage
 -----
 
