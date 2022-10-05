@@ -97,6 +97,7 @@ class Connection(object):
         add_header(properties, headers, 'routing_queue')
         add_header(properties, headers, 'routing_tag')
         add_header(properties, headers, 'quoting')
+        add_header(properties, headers, 'routing_engine')
 
         self.flightclient = client
         self.options = flight.FlightCallOptions(headers=headers)

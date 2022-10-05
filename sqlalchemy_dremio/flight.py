@@ -169,17 +169,21 @@ class DremioDialect_flight(default.DefaultDialect):
         if 'database' in opts:
             connectors.append('{0}={1}'.format('Schema', opts['database']))
 
-        def add_property(url, property_name, connectors):
-            if property_name in url.query:
-                connectors.append('{0}={1}'.format(property_name, url.query[property_name]))
+        # Clone the query dictionary with lower-case keys.
+        lc_query_dict = {k.lower(): v for k, v in url.query.items()}
+
+        def add_property(lc_query_dict, property_name, connectors):
+            if property_name.lower() in lc_query_dict:
+                connectors.append('{0}={1}'.format(property_name, lc_query_dict[property_name.lower()]))
         
-        add_property(url, 'UseEncryption', connectors)
-        add_property(url, 'DisableCertificateVerification', connectors)
-        add_property(url, 'TrustedCerts', connectors)
-        add_property(url, 'routing_queue', connectors)
-        add_property(url, 'routing_tag', connectors)
-        add_property(url, 'quoting', connectors)
-        add_property(url, 'token', connectors)
+        add_property(lc_query_dict, 'UseEncryption', connectors)
+        add_property(lc_query_dict, 'DisableCertificateVerification', connectors)
+        add_property(lc_query_dict, 'TrustedCerts', connectors)
+        add_property(lc_query_dict, 'routing_queue', connectors)
+        add_property(lc_query_dict, 'routing_tag', connectors)
+        add_property(lc_query_dict, 'quoting', connectors)
+        add_property(lc_query_dict, 'routing_engine', connectors)
+        add_property(lc_query_dict, 'Token', connectors)
 
         return [[";".join(connectors)], connect_args]
 
