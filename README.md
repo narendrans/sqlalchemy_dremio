@@ -30,4 +30,4 @@ Connection String example:
 Superset Integration
 -------------
 
-The ODBC connection to superset is now deprecated. Please update sqlalchemy_dremio to 2.0.0 to use the flight connection.
+The ODBC connection to superset is now deprecated. Please update sqlalchemy_dremio to 3.0.0 to use the flight connection.
