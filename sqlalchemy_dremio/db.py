@@ -71,7 +71,7 @@ class Connection(object):
                 with open(properties['TrustedCerts'] , "rb") as root_certs:
                     connection_args["tls_root_certs"] = root_certs.read()
             # Or disable server verification entirely
-            elif 'DisableServerVerification' in properties and properties['DisableServerVerification'].lower() == 'true':
+            elif 'DisableCertificateVerification' in properties and properties['DisableCertificateVerification'].lower() == 'true':
                 connection_args['disable_server_verification'] = True
 
         # Enabling cookie middleware for stateful connectivity.
