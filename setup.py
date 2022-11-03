@@ -21,7 +21,7 @@ test_requirements = [
 
 setup(
     name='sqlalchemy_dremio',
-    version='3.0.1',
+    version='3.0.2',
     description="A SQLAlchemy dialect for Dremio via the Flight interface.",
     long_description=readme,
     long_description_content_type='text/markdown',
