@@ -4,6 +4,8 @@ from sqlalchemy import schema, types, pool
 from sqlalchemy.engine import default, reflection
 from sqlalchemy.sql import compiler
 
+_dialect_name = "dremio+flight"
+
 _type_map = {
     'boolean': types.BOOLEAN,
     'BOOLEAN': types.BOOLEAN,
@@ -146,7 +148,8 @@ class DremioExecutionContext_flight(DremioExecutionContext):
 
 class DremioDialect_flight(default.DefaultDialect):
 
-    name = 'dremio+flight'
+    name = _dialect_name
+    driver = _dialect_name
     supports_sane_rowcount = False
     supports_sane_multi_rowcount = False
     poolclass = pool.SingletonThreadPool
