@@ -35,6 +35,10 @@ The ODBC connection to superset is now deprecated. Please update sqlalchemy_drem
 Release Notes
 -------------
 
+3.0.3
+-----
+- Add back missing routing_engine property.
+
 3.0.2
 -----
 - Add implementations of has_table and get_view_names.
