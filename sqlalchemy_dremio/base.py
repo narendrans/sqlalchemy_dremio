@@ -2,6 +2,8 @@ from sqlalchemy import schema, types, pool
 from sqlalchemy.engine import default, reflection
 from sqlalchemy.sql import compiler
 
+_dialect_name = "dremio"
+
 _type_map = {
     'boolean': types.BOOLEAN,
     'BOOLEAN': types.BOOLEAN,
@@ -145,7 +147,8 @@ class DremioIdentifierPreparer(compiler.IdentifierPreparer):
 
 
 class DremioDialect(default.DefaultDialect):
-    name = 'dremio'
+    name = _dialect_name
+    driver = _dialect_name
     supports_sane_rowcount = False
     supports_sane_multi_rowcount = False
     poolclass = pool.SingletonThreadPool
