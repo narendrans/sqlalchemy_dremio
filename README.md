@@ -16,7 +16,14 @@ A SQLAlchemy dialect for Dremio via ODBC and Flight interfaces.
 Installation
 ------------
 
+From pip:
+-----------
+
 `pip install sqlalchemy_dremio`
+
+Or from conda:
+--------------
+`conda install sqlalchemy-dremio`
 
 To install from source:
 `python setup.py install`
@@ -25,7 +32,31 @@ Usage
 -----
 
 Connection String example:
+
+Dremio Software:
+
 `dremio+flight://user:password@host:port/dremio`
+
+Dremio Cloud:
+
+`dremio+flight://data.dremio.cloud:443/?Token=<TOKEN>UseEncryption=true&disableCertificateVerification=true`
+
+Options:
+
+Schema - (Optional) The schema to use
+
+TLS:
+
+UseEncryption=true|false - (Optional) Enables TLS connection. Must be enabled on Dremio to use it. 
+DisableCertificateVerification=true|false - (Optional) Disables certificate verirication.
+
+WLM:
+
+https://docs.dremio.com/software/advanced-administration/workload-management/#query-tagging--direct-routing-configuration
+
+routing_queue - (Optional) The queue in which queries should run
+routing_tag - (Optonal) Routing tag to use.
+routing_engine - (Optional) The engine in which the queries should run
 
 Superset Integration
 -------------
