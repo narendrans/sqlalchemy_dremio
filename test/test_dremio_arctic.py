@@ -6,6 +6,8 @@ import logging
 #from sqlalchemy import MetaData
 #from sqlalchemy.testing.schema import Table
 import pytest
+import sqlalchemy
+
 from . import conftest
 
 LOGGER = logging.getLogger(__name__)
@@ -45,19 +47,23 @@ def test_row_count(engine):
 
 
 def test_has_table_true():
-    assert conftest.get_cloud_engine().has_table("users", schema = "sys.organization")
+    inspector = sqlalchemy.inspect(conftest.get_cloud_engine())
+    assert inspector.has_table("users", schema="sys.organization")
 
 
 def test_has_table_true2():
-    assert conftest.get_cloud_engine().has_table("users")
+    inspector = sqlalchemy.inspect(conftest.get_cloud_engine())
+    assert inspector.has_table("users")
 
 
 def test_has_table_false():
-    assert not conftest.get_cloud_engine().has_table("does_not_exist", schema = "sys")
+    inspector = sqlalchemy.inspect(conftest.get_cloud_engine())
+    assert not inspector.has_table("does_not_exist", schema = "sys")
 
 
 def test_has_table_false2():
-    assert not conftest.get_cloud_engine().has_table("does_not_exist")
+    inspector = sqlalchemy.inspect(conftest.get_cloud_engine())
+    assert not inspector.has_table("does_not_exist")
 
 
 def test_arctic_sources():

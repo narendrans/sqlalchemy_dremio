@@ -3,6 +3,9 @@ from __future__ import unicode_literals
 
 import logging
 import pytest
+import sqlalchemy
+from sqlalchemy.engine import Inspector
+
 from . import conftest
 
 LOGGER = logging.getLogger(__name__)
@@ -40,15 +43,20 @@ def test_row_count(engine):
     rows = conftest.get_software_engine().execute('SELECT * FROM $scratch.sqlalchemy_tests').fetchall()
     assert len(rows) == 2
 
+
 def test_has_table_True():
-    assert conftest.get_software_engine().has_table("version", schema = "sys")
+    inspector = sqlalchemy.inspect(conftest.get_software_engine())
+    assert inspector.has_table("version", schema="sys")
 
 def test_has_table_True2():
-    assert conftest.get_software_engine().has_table("version")
+    inspector = sqlalchemy.inspect(conftest.get_software_engine())
+    assert inspector.has_table("version")
 
 def test_has_table_False():
-    assert not conftest.get_software_engine().has_table("does_not_exist", schema = "sys")
+    inspector = sqlalchemy.inspect(conftest.get_software_engine())
+    assert not inspector.has_table("does_not_exist", "sys")
 
 def test_has_table_False2():
-    assert not conftest.get_software_engine().has_table("does_not_exist")
+    inspector = sqlalchemy.inspect(conftest.get_software_engine())
+    assert not inspector.has_table("does_not_exist")
 
