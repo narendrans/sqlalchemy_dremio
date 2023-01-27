@@ -16,7 +16,7 @@ def help():
     """)
 
 
-def get_engine():
+def get_software_engine():
     """
     Creates a connection using the parameters defined in ODBC connect string
     """
@@ -26,12 +26,24 @@ def get_engine():
     return create_engine(os.environ['DREMIO_CONNECTION_URL'])
 
 
+def get_cloud_engine():
+    """
+    Creates a connection using the parameters defined in ODBC connect string
+    """
+    if not os.environ['DREMIO_CLOUD_CONNECTION_URL']:
+        help()
+        return
+    return create_engine(os.environ['DREMIO_CLOUD_CONNECTION_URL'])
+
+
 @pytest.fixture(scope='session', autouse=True)
 def init_test_schema(request):
     test_sql = Path("scripts/sample.sql")
-    get_engine().execute(open(test_sql).read())
+    get_software_engine().execute(open(test_sql).read())
+    get_cloud_engine().execute(open(test_sql).read())
 
     def fin():
-        get_engine().execute('DROP TABLE $scratch.sqlalchemy_tests')
+        get_software_engine().execute('DROP TABLE $scratch.sqlalchemy_tests')
+        get_cloud_engine().execute('DROP TABLE $scratch.sqlalchemy_tests')
 
     request.addfinalizer(fin)
