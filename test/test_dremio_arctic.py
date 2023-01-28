@@ -2,9 +2,6 @@
 from __future__ import unicode_literals
 
 import logging
-#import sqlalchemy
-#from sqlalchemy import MetaData
-#from sqlalchemy.testing.schema import Table
 import pytest
 import sqlalchemy
 
@@ -70,21 +67,22 @@ def test_arctic_sources():
     # relies on DREMIO_CLOUD_CONNECTION_URL = "dremio+flight://data.dev.dremio.site:443/?UseEncryption=true&token=UrKDrBLWTuS9VSEfF%2F159o9nIe64No83DC%2Feu%2BpRNrPf2RR9%2BRL7HbzGJXBg4A%3D%3D"
 
     engine = conftest.get_cloud_engine()
+    # list of queries and number of rows the query returns
     listOfQueries = [
-        'USE BRANCH main in BITestCat',
-        'SELECT * FROM "BITestCat"."st2"',
-        'SELECT * FROM "BITestCat"."test1Table"',
-        'SELECT * FROM "BITestCat"."s1tab"',
-        'SELECT * FROM "BITestCat.my.awesome"."table" where "trip_distance_mi"=1.5 limit 100',
-        'SELECT * FROM "BITestCat.my.awesome.table"."2" where "trip_distance_mi"=1.5 limit 100',
-        'SELECT * FROM "BITestCat.folder.1"."my-awesome-table" limit 100',
-        'SHOW TABLES IN BITestCat',
-        'SELECT * FROM INFORMATION_SCHEMA."TABLES"',
-        'SELECT * FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_SCHEMA=\'test_arctic\'',
-        'USE BRANCH dev in BITestCat',
-        'SELECT * FROM "BITestCat"."s1tab"',
-        'SELECT * FROM "BITestCat"."st2"'
+        ('USE BRANCH main in BITestCat', 1),
+        ('SELECT * FROM "BITestCat"."st2"', 2),
+        ('SELECT * FROM "BITestCat"."test1Table"', 1),
+        ('SELECT * FROM "BITestCat"."s1tab"', 1),
+        ('SELECT * FROM "BITestCat.my.awesome"."table" where "trip_distance_mi"=1.5 limit 100', 100),
+        ('SELECT * FROM "BITestCat.my.awesome.table"."2" where "trip_distance_mi"=1.5 limit 100', 100),
+        ('SELECT * FROM "BITestCat.folder.1"."my-awesome-table" limit 100', 100),
+        ('SHOW TABLES IN BITestCat', 6),
+        ('SELECT * FROM INFORMATION_SCHEMA."TABLES"', 90),
+        ('SELECT * FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_SCHEMA=\'test_arctic\'', 5),
+        ('USE BRANCH dev in BITestCat', 1),
+        ('SELECT * FROM "BITestCat"."s1tab"', 4),
+        ('SELECT * FROM "BITestCat"."st2"', 2)
     ]
     for sql in listOfQueries:
-        result = engine.execute(sql).fetchall();
-        print(sql, "Rows: ", len(result))
+        result = engine.execute(sql[0]).fetchall()
+        assert sql[1] == len(result)
