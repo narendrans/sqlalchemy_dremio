@@ -3,3 +3,4 @@ SQLAlchemy~=1.4.46
 pyarrow~=10.0.1
 bumpversion>=0.5.3
 setuptools~=65.4.1
+python-dotenv~=0.21.1

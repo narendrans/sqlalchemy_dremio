@@ -66,7 +66,7 @@ def test_arctic_sources(engine):
         ('SELECT * FROM "BITestCat.my.awesome.table"."2" where "trip_distance_mi"=1.5 limit 100', 100),
         ('SELECT * FROM "BITestCat.folder.1"."my-awesome-table" limit 100', 100),
         ('SHOW TABLES IN BITestCat', 6),
-        ('SELECT * FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_SCHEMA=\'test_arctic\'', 5),
+        ('SELECT * FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_SCHEMA=\'INFORMATION_SCHEMA\'', 5),
         ('USE BRANCH dev in BITestCat', 1),
         ('SELECT * FROM "BITestCat"."s1tab"', 4),
         ('SELECT * FROM "BITestCat"."st2"', 2)
