@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine
-import time
 
 
 db_uri = "dremio+flight://dremio:dremio123@localhost:32010/dremio?UseEncryption=false"
