@@ -39,16 +39,17 @@ Dremio Software:
 
 Dremio Cloud:
 
-`dremio+flight://data.dremio.cloud:443/?Token=<TOKEN>UseEncryption=true&disableCertificateVerification=true`
+`dremio+flight://data.dremio.cloud:443?Token=<TOKEN>UseEncryption=true&DisableCertificateVerification=true`
 
-Options:
+Schema specification:
 
-Schema - (Optional) The schema to use
+`dremio+flight://data.dremio.cloud:443/<SCHEMA>?Token=<TOKEN>UseEncryption=true&DisableCertificateVerification=true`
 
 TLS:
 
 UseEncryption=true|false - (Optional) Enables TLS connection. Must be enabled on Dremio to use it. 
 DisableCertificateVerification=true|false - (Optional) Disables certificate verirication.
+TrustedCerts - (Optional) The full path of the .pem file containing certificates trusted by a CA.
 
 WLM:
 
