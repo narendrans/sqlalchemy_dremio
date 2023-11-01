@@ -178,7 +178,7 @@ class DremioDialect_flight(default.DefaultDialect):
         def add_property(lc_query_dict, property_name, connectors):
             if property_name.lower() in lc_query_dict:
                 connectors.append('{0}={1}'.format(property_name, lc_query_dict[property_name.lower()]))
-        
+
         add_property(lc_query_dict, 'UseEncryption', connectors)
         add_property(lc_query_dict, 'DisableCertificateVerification', connectors)
         add_property(lc_query_dict, 'TrustedCerts', connectors)
@@ -187,6 +187,7 @@ class DremioDialect_flight(default.DefaultDialect):
         add_property(lc_query_dict, 'quoting', connectors)
         add_property(lc_query_dict, 'routing_engine', connectors)
         add_property(lc_query_dict, 'Token', connectors)
+        add_property(lc_query_dict, 'UseLegacyAuth', connectors)
 
         return [[";".join(connectors)], connect_args]
 
@@ -257,4 +258,3 @@ class DremioDialect_flight(default.DefaultDialect):
 
     def get_view_names(self, connection, schema=None, **kwargs):
         return []
-        
