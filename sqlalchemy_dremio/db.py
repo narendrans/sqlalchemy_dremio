@@ -43,6 +43,21 @@ def check_result(f):
     return d
 
 
+class LegacyAuthHandler(flight.ClientAuthHandler):
+    def __init__(self, username: str, password: str):
+        super().__init__()
+        self.basic_auth = flight.BasicAuth(username, password)
+        self.token = None
+
+    def authenticate(self, outgoing, incoming):
+        auth = self.basic_auth.serialize()
+        outgoing.write(auth)
+        self.token = incoming.read()
+
+    def get_token(self):
+        return self.token
+
+
 class Connection(object):
 
     def __init__(self, connection_string):
@@ -79,12 +94,15 @@ class Connection(object):
 
         client = flight.FlightClient('grpc+{0}://{1}:{2}'.format(protocol, properties['HOST'], properties['PORT']),
             middleware=[client_cookie_middleware], **connection_args)
-        
+
         # Authenticate either using basic username/password or using the Token parameter.
         headers = []
         if 'UID' in properties:
-            bearer_token = client.authenticate_basic_token(properties['UID'], properties['PWD'])
-            headers.append(bearer_token)
+            if 'UseLegacyAuth' in properties and properties['UseLegacyAuth'].lower() == 'true':
+                client.authenticate(LegacyAuthHandler(properties['UID'], properties['PWD']))
+            else:
+                bearer_token = client.authenticate_basic_token(properties['UID'], properties['PWD'])
+                headers.append(bearer_token)
         else:
             headers.append((b'authorization', "Bearer {}".format(properties['Token']).encode('utf-8')))
 
