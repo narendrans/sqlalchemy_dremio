@@ -29,6 +29,7 @@ _type_map = {
     'time': types.TIME,
     'TIME': types.TIME,
     'datetime64[ns]': types.DATETIME,
+    'datetime64[ms]': types.DATETIME,
     'timestamp': types.TIMESTAMP,
     'TIMESTAMP': types.TIMESTAMP,
     'varchar': types.VARCHAR,
