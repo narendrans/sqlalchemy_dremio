@@ -47,7 +47,7 @@ Schema - (Optional) The schema to use
 
 TLS:
 
-UseEncryption=true|false - (Optional) Enables TLS connection. Must be enabled on Dremio to use it. 
+UseEncryption=true|false - (Optional) Enables TLS connection. Must be enabled on Dremio to use it.
 DisableCertificateVerification=true|false - (Optional) Disables certificate verirication.
 
 WLM:
@@ -65,6 +65,10 @@ The ODBC connection to superset is now deprecated. Please update sqlalchemy_drem
 
 Release Notes
 -------------
+
+3.0.4
+-----
+- Addressing issue #34 and #37: Add driver name to dialects
 
 3.0.3
 -----
