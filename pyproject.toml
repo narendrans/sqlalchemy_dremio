@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "sqlalchemy_dremio"
+version = "3.0.4"
+description = "A SQLAlchemy dialect for Dremio via the Flight interface."
+readme = "README.md"
+authors = [
+    {name = "Naren", email = "me@narendran.info"}
+]
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dependencies = [
+    "sqlalchemy",
+    "pyarrow"
+]
+keywords = ["sqlalchemy", "dremio"]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: Apache Software License',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12'
+]
+
+[project.urls]
+Repository = "https://github.com/narendrans/sqlalchemy_dremio"
+
+[project.entry-points."sqlalchemy.dialects"]
+"dremio.flight" = "sqlalchemy_dremio.flight:DremioDialect_flight"
+
+[project.optional-dependencies]
+test = ["pytest"]
+dev = ["sqlalchemy_dremio[test]", "bumpversion"]
