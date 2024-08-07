@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Any
 
 import pytest
 import sqlalchemy as sa
@@ -29,9 +30,12 @@ def test_table() -> sa.Table:
                     sa.Column("bool_col", sa.BOOLEAN),
                     )
 
-
-def test_can_use_where_statement(test_table: sa.Table, db: Connection):
-    sql = sa.select(test_table.c.int_col).where(test_table.c.int_col == 1)
+@pytest.mark.parametrize("param,column_name,expected", [
+    (1, "int_col", 1),
+    ("ZZZZZZZZZZZZ", "varchar_col",1)
+])
+def test_can_use_where_statement(test_table: sa.Table, db: Connection,column_name: str, param: Any, expected: Any):
+    sql = sa.select(test_table.c.int_col).where(getattr(test_table.c, column_name) == param)
     result = db.execute(sql).scalar_one()
     assert result == 1
 

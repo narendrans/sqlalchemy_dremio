@@ -183,6 +183,8 @@ class Cursor:
         self.description = None
         if params is not None:
             for param in params:
+                if isinstance(param, str):
+                    param = f"'{param}'"
                 query = query.replace('?', str(param), 1)
         self._results, self.description = execute(query, self.flightclient, self.options)
         return self
