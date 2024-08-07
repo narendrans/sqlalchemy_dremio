@@ -1,17 +1,9 @@
 import datetime
-import logging
 from typing import Any
 
 import pytest
 import sqlalchemy as sa
 from sqlalchemy import Connection
-
-LOGGER = logging.getLogger(__name__)
-
-FULL_ROWS = """[(1, 81297389127389213, Decimal('9112.229'), 9192.921875, 9292.17272, 'ZZZZZZZZZZZZ', b'AAAAAAAAA', datetime.datetime(2020, 4, 5, 15, 8, 39, 574000), datetime.date(2020, 4, 5)
-, datetime.time(12, 19, 1), True), (2, 812123489127389213, Decimal('6782.229'), 2234193.0, 9122922.17272, 'BBBBBBBBB', b'CCCCCCCCCCCC', datetime.datetime(2020, 4, 5, 15, 8, 39, 574000), datetime.date(2022,
-4, 5), datetime.time(10, 19, 1), False)]"""
-
 
 @pytest.fixture
 def test_table() -> sa.Table:
@@ -32,7 +24,7 @@ def test_table() -> sa.Table:
 
 @pytest.mark.parametrize("param,column_name,expected", [
     (1, "int_col", 1),
-    ("ZZZZZZZZZZZZ", "varchar_col",1)
+    ("ZZZZZZZZZZZZ", "varchar_col", 1)
 ])
 def test_can_use_where_statement(test_table: sa.Table, db: Connection,column_name: str, param: Any, expected: Any):
     sql = sa.select(test_table.c.int_col).where(getattr(test_table.c, column_name) == param)
