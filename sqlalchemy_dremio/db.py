@@ -1,11 +1,9 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import logging
+from typing import Optional, Any, Never, Generator, Union
 
 from pyarrow import flight
+from pyarrow._flight import FlightClient
+from sqlalchemy import Executable, types
 
 from sqlalchemy_dremio.exceptions import Error, NotSupportedError
 from sqlalchemy_dremio.flight_middleware import CookieMiddlewareFactory
@@ -14,6 +12,10 @@ from sqlalchemy_dremio.query import execute
 logger = logging.getLogger(__name__)
 
 paramstyle = 'qmark'
+
+
+class Binary(types.LargeBinary):
+    __visit_name__ = "VARBINARY"
 
 
 def connect(c):
@@ -26,7 +28,7 @@ def check_closed(f):
     def g(self, *args, **kwargs):
         if self.closed:
             raise Error(
-                '{klass} already closed'.format(klass=self.__class__.__name__))
+                f'{self.__class__.__name__} already closed')
         return f(self, *args, **kwargs)
 
     return g
@@ -43,9 +45,9 @@ def check_result(f):
     return d
 
 
-class Connection(object):
+class Connection:
 
-    def __init__(self, connection_string):
+    def __init__(self, connection_string: str):
 
         # Build a map from the connection string supplied using the SQLAlchemy URI
         # and supplied properties. The format is generated from DremioDialect_flight.create_connect_args()
@@ -55,7 +57,7 @@ class Connection(object):
         splits = connection_string.split(";")
 
         for kvpair in splits:
-            kv = kvpair.split("=",1)
+            kv = kvpair.split("=", 1)
             properties[kv[0]] = kv[1]
 
         connection_args = {}
@@ -68,32 +70,33 @@ class Connection(object):
             # Specify the trusted certificates
             connection_args['disable_server_verification'] = False
             if 'TrustedCerts' in properties:
-                with open(properties['TrustedCerts'] , "rb") as root_certs:
+                with open(properties['TrustedCerts'], "rb") as root_certs:
                     connection_args["tls_root_certs"] = root_certs.read()
             # Or disable server verification entirely
-            elif 'DisableCertificateVerification' in properties and properties['DisableCertificateVerification'].lower() == 'true':
+            elif 'DisableCertificateVerification' in properties and properties[
+                'DisableCertificateVerification'].lower() == 'true':
                 connection_args['disable_server_verification'] = True
 
         # Enabling cookie middleware for stateful connectivity.
         client_cookie_middleware = CookieMiddlewareFactory()
 
-        client = flight.FlightClient('grpc+{0}://{1}:{2}'.format(protocol, properties['HOST'], properties['PORT']),
-            middleware=[client_cookie_middleware], **connection_args)
-        
+        client = flight.FlightClient(f'grpc+{protocol}://{properties["HOST"]}:{properties["PORT"]}',
+                                     middleware=[client_cookie_middleware], **connection_args)
+
         # Authenticate either using basic username/password or using the Token parameter.
         headers = []
         if 'UID' in properties:
             bearer_token = client.authenticate_basic_token(properties['UID'], properties['PWD'])
             headers.append(bearer_token)
         else:
-            headers.append((b'authorization', "Bearer {}".format(properties['Token']).encode('utf-8')))
+            headers.append((b'authorization', f"Bearer {properties["Token"]}".encode('utf-8')))
 
         # Propagate Dremio-specific headers.
-        def add_header(properties, headers, header_name):
+        def add_header(properties: dict, headers: list[tuple[bytes, bytes]], header_name: str) -> None:
             if header_name in properties:
                 headers.append((header_name.lower().encode('utf-8'), properties[header_name].encode('utf-8')))
 
-        add_header(properties, headers, 'Schema')
+        add_header(properties, headers, 'schema')
         add_header(properties, headers, 'routing_queue')
         add_header(properties, headers, 'routing_tag')
         add_header(properties, headers, 'quoting')
@@ -106,11 +109,11 @@ class Connection(object):
         self.cursors = []
 
     @check_closed
-    def rollback(self):
+    def rollback(self) -> None:
         pass
 
     @check_closed
-    def close(self):
+    def close(self) -> None:
         """Close the connection now."""
         self.closed = True
         for cursor in self.cursors:
@@ -120,11 +123,11 @@ class Connection(object):
                 pass  # already closed
 
     @check_closed
-    def commit(self):
+    def commit(self) -> None:
         pass
 
     @check_closed
-    def cursor(self):
+    def cursor(self) -> "Cursor":
         """Return a new Cursor Object using the connection."""
         cursor = Cursor(self.flightclient, self.options)
         self.cursors.append(cursor)
@@ -132,22 +135,22 @@ class Connection(object):
         return cursor
 
     @check_closed
-    def execute(self, query):
+    def execute(self, query: Executable) -> "Cursor":
         cursor = self.cursor()
         return cursor.execute(query)
 
-    def __enter__(self):
+    def __enter__(self) -> "Connection":
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *exc) -> None:
         self.commit()  # no-op
         self.close()
 
 
-class Cursor(object):
+class Cursor:
     """Connection cursor."""
 
-    def __init__(self, flightclient=None, options=None):
+    def __init__(self, flightclient: Optional[FlightClient] = None, options: Optional[Any] = None):
         self.flightclient = flightclient
         self.options = options
 
@@ -167,29 +170,31 @@ class Cursor(object):
     @property
     @check_result
     @check_closed
-    def rowcount(self):
+    def rowcount(self) -> int:
         return len(self._results)
 
     @check_closed
-    def close(self):
+    def close(self) -> None:
         """Close the cursor."""
         self.closed = True
 
     @check_closed
-    def execute(self, query, params=None):
+    def execute(self, query: Union[Executable, str], params: Optional[tuple[Any, ...]] = None) -> "Cursor":
         self.description = None
-        self._results, self.description = execute(
-            query, self.flightclient, self.options)
+        if params is not None:
+            for param in params:
+                query = query.replace('?', str(param), 1)
+        self._results, self.description = execute(query, self.flightclient, self.options)
         return self
 
     @check_closed
-    def executemany(self, query):
+    def executemany(self, query: str) -> Never:
         raise NotSupportedError(
             '`executemany` is not supported, use `execute` instead')
 
     @check_result
     @check_closed
-    def fetchone(self):
+    def fetchone(self) -> Optional[Any]:
         """
         Fetch the next row of a query result set, returning a single sequence,
         or `None` when no more data is available.
@@ -201,7 +206,7 @@ class Cursor(object):
 
     @check_result
     @check_closed
-    def fetchmany(self, size=None):
+    def fetchmany(self, size: Optional[int] = None) -> list[tuple[Any, ...]]:
         """
         Fetch the next set of rows of a query result, returning a sequence of
         sequences (e.g. a list of tuples). An empty sequence is returned when
@@ -214,7 +219,7 @@ class Cursor(object):
 
     @check_result
     @check_closed
-    def fetchall(self):
+    def fetchall(self) -> list[tuple[Any, ...]]:
         """
         Fetch all (remaining) rows of a query result, returning them as a
         sequence of sequences (e.g. a list of tuples). Note that the cursor's
@@ -225,15 +230,15 @@ class Cursor(object):
         return out
 
     @check_closed
-    def setinputsizes(self, sizes):
+    def setinputsizes(self, sizes) -> None:
         # not supported
-        pass
+        raise NotSupportedError()
 
     @check_closed
-    def setoutputsizes(self, sizes):
+    def setoutputsizes(self, sizes) -> None:
         # not supported
-        pass
+        raise NotSupportedError()
 
     @check_closed
-    def __iter__(self):
+    def __iter__(self) -> Generator[tuple[Any, ...], None, None]:
         return iter(self._results)

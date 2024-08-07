@@ -1,8 +1,13 @@
-import re
+from types import ModuleType
+from typing import Optional
 
-from sqlalchemy import schema, types, pool
+from sqlalchemy import schema, types, pool, Table, URL, Connection
 from sqlalchemy.engine import default, reflection
+from sqlalchemy.engine.interfaces import ReflectedIndex, ReflectedPrimaryKeyConstraint, ReflectedForeignKeyConstraint, \
+    ReflectedColumn
 from sqlalchemy.sql import compiler
+
+from sqlalchemy_dremio import exceptions
 
 _dialect_name = "dremio+flight"
 
@@ -43,23 +48,25 @@ class DremioExecutionContext(default.DefaultExecutionContext):
     pass
 
 
+
+
 class DremioCompiler(compiler.SQLCompiler):
     def visit_char_length_func(self, fn, **kw):
-        return 'length{}'.format(self.function_argspec(fn, **kw))
+        return f'length{self.function_argspec(fn, **kw)}'
 
-    def visit_table(self, table, asfrom=False, **kwargs):
-
+    def visit_table(self, table: Table, asfrom: bool = False, **kwargs) -> str:
         if asfrom:
-            if table.schema != None and table.schema != "":
-                fixed_schema = ".".join(["\"" + i.replace('"', '') + "\"" for i in table.schema.split(".")])
-                fixed_table = fixed_schema + ".\"" + table.name.replace("\"", "") + "\""
+            if table.schema is not None and table.schema != "":
+                fixed_schema = ".".join([f'"{i.replace('"', '')}"' for i in table.schema.split(".")])
+                fixed_table = f'{fixed_schema}."{table.name.replace('"', "")}"'
             else:
-                fixed_table = "\"" + table.name.replace("\"", "") + "\""
+                fixed_table = f'"{table.name.replace('"', "")}"'
             return fixed_table
         else:
             return ""
 
     def visit_tablesample(self, tablesample, asfrom=False, **kw):
+        # TODO: This is currently a noop
         print(tablesample)
 
 
@@ -67,15 +74,11 @@ class DremioDDLCompiler(compiler.DDLCompiler):
     def get_column_specification(self, column, **kwargs):
         colspec = self.preparer.format_column(column)
         colspec += " " + self.dialect.type_compiler.process(column.type)
-        if column is column.table._autoincrement_column and \
-            True and \
-            (
-                column.default is None or \
-                isinstance(column.default, schema.Sequence)
-            ):
+        if column is column.table._autoincrement_column and (
+            column.default is None or isinstance(column.default, schema.Sequence)
+        ):
             colspec += " IDENTITY"
-            if isinstance(column.default, schema.Sequence) and \
-                column.default.start > 0:
+            if isinstance(column.default, schema.Sequence) and column.default.start > 0:
                 colspec += " " + str(column.default.start)
         else:
             default = self.get_column_default_string(column)
@@ -138,8 +141,7 @@ class DremioIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words.update(list(dremio_unique))
 
     def __init__(self, dialect):
-        super(DremioIdentifierPreparer, self). \
-            __init__(dialect, initial_quote='"', final_quote='"')
+        super().__init__(dialect, initial_quote='"', final_quote='"')
 
 
 class DremioExecutionContext_flight(DremioExecutionContext):
@@ -147,7 +149,6 @@ class DremioExecutionContext_flight(DremioExecutionContext):
 
 
 class DremioDialect_flight(default.DefaultDialect):
-
     name = _dialect_name
     driver = _dialect_name
     supports_sane_rowcount = False
@@ -159,26 +160,26 @@ class DremioDialect_flight(default.DefaultDialect):
     preparer = DremioIdentifierPreparer
     execution_ctx_cls = DremioExecutionContext
 
-    def create_connect_args(self, url):
+    def create_connect_args(self, url: URL):
         opts = url.translate_connect_args(username='user')
         connect_args = {}
-        connectors = ['HOST=%s' % opts['host'],
-                      'PORT=%s' % opts['port']]
+        connectors = [f'HOST={opts["host"]}',
+                      f'PORT={opts["port"]}']
 
         if 'user' in opts:
-            connectors.append('{0}={1}'.format('UID', opts['user']))
-            connectors.append('{0}={1}'.format('PWD', opts['password']))
+            connectors.append(f'UID={opts["user"]}')
+            connectors.append(f'PWD={opts['password']}')
 
         if 'database' in opts:
-            connectors.append('{0}={1}'.format('Schema', opts['database']))
+            connectors.append(f'schema={opts["database"]}')
 
         # Clone the query dictionary with lower-case keys.
         lc_query_dict = {k.lower(): v for k, v in url.query.items()}
 
-        def add_property(lc_query_dict, property_name, connectors):
+        def add_property(lc_query_dict: dict, property_name: str, connectors: list[str]):
             if property_name.lower() in lc_query_dict:
-                connectors.append('{0}={1}'.format(property_name, lc_query_dict[property_name.lower()]))
-        
+                connectors.append(f'{property_name}={lc_query_dict[property_name.lower()]}')
+
         add_property(lc_query_dict, 'UseEncryption', connectors)
         add_property(lc_query_dict, 'DisableCertificateVerification', connectors)
         add_property(lc_query_dict, 'TrustedCerts', connectors)
@@ -191,70 +192,69 @@ class DremioDialect_flight(default.DefaultDialect):
         return [[";".join(connectors)], connect_args]
 
     @classmethod
-    def dbapi(cls):
+    def dbapi(cls) -> ModuleType:
         import sqlalchemy_dremio.db as module
         return module
 
-    def connect(self, *cargs, **cparams):
-        return self.dbapi.connect(*cargs, **cparams)
+    def connect(self, *cargs, **cparams) -> Connection:
+        return self.loaded_dbapi.connect(*cargs, **cparams)
 
     def last_inserted_ids(self):
         return self.context.last_inserted_ids
 
-    def get_indexes(self, connection, table_name, schema, **kw):
-        return []
+    def get_indexes(self, connection: Connection, table_name: str, schema: Optional[str] = None, **kw) -> list[
+        ReflectedIndex]:
+        raise exceptions.NotSupportedError()
 
-    def get_pk_constraint(self, connection, table_name, schema=None, **kw):
-        return []
+    def get_pk_constraint(self, connection: Connection, table_name: str, schem: Optional[str] = None,
+                          **kw) -> ReflectedPrimaryKeyConstraint:
+        raise exceptions.NotSupportedError()
 
-    def get_foreign_keys(self, connection, table_name, schema=None, **kw):
-        return []
+    def get_foreign_keys(self, connection: Connection, table_name: str, schema: Optional[str] = None, **kw) -> list[
+        ReflectedForeignKeyConstraint]:
+        raise exceptions.NotSupportedError()
 
-    def get_columns(self, connection, table_name, schema, **kw):
-        sql = "DESCRIBE \"{0}\"".format(table_name)
-        if schema != None and schema != "":
-            sql = "DESCRIBE \"{0}\".\"{1}\"".format(schema, table_name)
-        cursor = connection.execute(sql)
-        result = []
-        for col in cursor:
-            cname = col[0]
-            ctype = _type_map[col[1]]
-            column = {
-                "name": cname,
-                "type": ctype,
-                "default": None,
-                "comment": None,
-                "nullable": True
-            }
-            result.append(column)
-        return (result)
+    def get_columns(self,
+                    connection: Connection,
+                    table_name: str,
+                    schema: Optional[str] = None,
+                    **kw) -> list[ReflectedColumn]:
+        sql = f'DESCRIBE "{table_name}"'
+        if schema is not None and schema != "":
+            sql = f'DESCRIBE "{schema}"."{table_name}"'
+        cursor = connection.exec_driver_sql(sql)
+        result = [ReflectedColumn(name=col[0],
+                                  type=_type_map[col[1]],
+                                  default=None,
+                                  comment=None,
+                                  nullable=True)
+                  for col in cursor]
+        return result
 
     @reflection.cache
-    def get_table_names(self, connection, schema, **kw):
+    def get_table_names(self, connection: Connection, schema: Optional[str] = None, **kw) -> list[str]:
         sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES"'
         if schema is not None:
-            sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.\"TABLES\" WHERE TABLE_SCHEMA = '" + schema + "'"
+            sql = f'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_SCHEMA = "{schema}"'
 
-        result = connection.execute(sql)
+        result = connection.exec_driver_sql(sql)
         table_names = [r[0] for r in result]
         return table_names
 
-    def get_schema_names(self, connection, schema=None, **kw):
-        result = connection.execute("SHOW SCHEMAS")
+    def get_schema_names(self, connection: Connection, schema: Optional[str] = None, **kw) -> list[str]:
+        result = connection.exec_driver_sql("SHOW SCHEMAS")
         schema_names = [r[0] for r in result]
         return schema_names
 
-
     @reflection.cache
-    def has_table(self, connection, table_name, schema=None, **kw):
+    def has_table(self, connection: Connection, table_name: str, schema: Optional[str] = None, **kw) -> bool:
         sql = 'SELECT COUNT(*) FROM INFORMATION_SCHEMA."TABLES"'
-        sql += " WHERE TABLE_NAME = '" + str(table_name) + "'"
+        sql += f" WHERE TABLE_NAME = '{table_name}'"
         if schema is not None and schema != "":
-            sql += " AND TABLE_SCHEMA = '" + str(schema) + "'"
-        result = connection.execute(sql)
-        countRows = [r[0] for r in result]
-        return countRows[0] > 0
+            sql += f" AND TABLE_SCHEMA = '{schema}'"
+        result = connection.exec_driver_sql(sql)
+        count_rows = [r[0] for r in result]
+        return count_rows[0] > 0
 
-    def get_view_names(self, connection, schema=None, **kwargs):
-        return []
-        
+    def get_view_names(self, connection: Connection, schema: Optional[str] = None, **kwargs) -> list[str]:
+        raise exceptions.NotSupportedError()

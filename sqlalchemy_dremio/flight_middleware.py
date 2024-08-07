@@ -1,17 +1,21 @@
+from http.cookies import SimpleCookie
+
+from pyarrow._flight import CallInfo
 from pyarrow.flight import ClientMiddleware
 from pyarrow.flight import ClientMiddlewareFactory
-from http.cookies import SimpleCookie
 
 
 class CookieMiddlewareFactory(ClientMiddlewareFactory):
     """A factory that creates CookieMiddleware(s)."""
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs) -> None:
         self.cookies = {}
+        super().__init__(*args, **kwargs)
 
-    def start_call(self, info):
+    def start_call(self, info: CallInfo) -> "CookieMiddleware":
         return CookieMiddleware(self)
-        
+
+
 class CookieMiddleware(ClientMiddleware):
     """
     A ClientMiddleware that receives and retransmits cookies.
@@ -22,10 +26,11 @@ class CookieMiddleware(ClientMiddleware):
         The factory containing the currently cached cookies.
     """
 
-    def __init__(self, factory):
+    def __init__(self, factory: CookieMiddlewareFactory, *args, **kwargs) -> None:
         self.factory = factory
+        super().__init__(*args, **kwargs)
 
-    def received_headers(self, headers):
+    def received_headers(self, headers: dict[str, str]) -> None:
         for key in headers:
             if key.lower() == 'set-cookie':
                 cookie = SimpleCookie()
@@ -34,8 +39,8 @@ class CookieMiddleware(ClientMiddleware):
 
                 self.factory.cookies.update(cookie.items())
 
-    def sending_headers(self):
+    def sending_headers(self) -> dict[bytes, bytes]:
         if self.factory.cookies:
-            cookie_string = '; '.join("{!s}={!s}".format(key, val.value) for (key, val) in self.factory.cookies.items())
+            cookie_string = '; '.join(f"{key}={val.value}" for key, val in self.factory.cookies.items())
             return {b'cookie': cookie_string.encode('utf-8')}
         return {}

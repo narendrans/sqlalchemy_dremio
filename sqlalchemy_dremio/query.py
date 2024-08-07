@@ -1,12 +1,10 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from typing import Optional, Any
 
-from sqlalchemy import types
-
+import pandas as pd
 import pyarrow as pa
 from pyarrow import flight
+from pyarrow._flight import FlightClient, FlightCallOptions
+from sqlalchemy import types
 
 _type_map = {
     'boolean': types.BOOLEAN,
@@ -29,6 +27,7 @@ _type_map = {
     'time': types.TIME,
     'TIME': types.TIME,
     'datetime64[ns]': types.DATETIME,
+    'datetime64[ms]': types.DATETIME,
     'timestamp': types.TIMESTAMP,
     'TIMESTAMP': types.TIMESTAMP,
     'varchar': types.VARCHAR,
@@ -39,10 +38,10 @@ _type_map = {
 }
 
 
-def run_query(query, flightclient=None, options=None):
+def run_query(query: str, flightclient: Optional[FlightClient] = None,
+              options: Optional[FlightCallOptions] = None) -> pd.DataFrame:
     info = flightclient.get_flight_info(flight.FlightDescriptor.for_command(query), options)
     reader = flightclient.do_get(info.endpoints[0].ticket, options)
-
     batches = []
     while True:
         try:
@@ -52,12 +51,15 @@ def run_query(query, flightclient=None, options=None):
             break
 
     data = pa.Table.from_batches(batches)
+    # TODO: Make pandas an optional dependency
     df = data.to_pandas()
 
     return df
 
 
-def execute(query, flightclient=None, options=None):
+def execute(query: str,
+            flightclient: Optional[FlightClient] = None,
+            options: Optional[FlightCallOptions] = None) -> tuple[list[Any], list[tuple]]:
     df = run_query(query, flightclient, options)
 
     result = []
