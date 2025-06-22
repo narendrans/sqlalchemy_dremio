@@ -1,0 +1,39 @@
+name: Dremio Integration Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      dremio:
+        image: dremio/dremio-oss:latest
+        ports:
+          - 9047:9047
+          - 31010:31010
+          - 32010:32010
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          pip install -r requirements_dev.txt
+      - name: Wait for Dremio
+        run: |
+          for i in {1..60}; do
+            curl -f http://localhost:9047/ || true
+            if [ $? -eq 0 ]; then break; fi
+            sleep 5
+          done
+      - name: Run tests
+        env:
+          DREMIO_CONNECTION_URL: dremio+flight://dremio:dremio123@localhost:32010/dremio?UseEncryption=false
+        run: |
+          pytest

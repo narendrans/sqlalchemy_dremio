@@ -54,9 +54,23 @@ WLM:
 
 https://docs.dremio.com/software/advanced-administration/workload-management/#query-tagging--direct-routing-configuration
 
+
 routing_queue - (Optional) The queue in which queries should run
 routing_tag - (Optonal) Routing tag to use.
 routing_engine - (Optional) The engine in which the queries should run
+
+Testing
+-------
+
+You can run the integration tests with the Dremio community edition Docker image.
+
+```bash
+docker run -d -p 9047:9047 -p 31010:31010 -p 32010:32010 --name dremio dremio/dremio-oss:latest
+export DREMIO_CONNECTION_URL="dremio+flight://dremio:dremio123@localhost:32010/dremio?UseEncryption=false"
+pytest
+```
+
+The workflow in `.github/workflows/dremio.yml` demonstrates how to run these tests automatically on GitHub Actions.
 
 Superset Integration
 -------------
