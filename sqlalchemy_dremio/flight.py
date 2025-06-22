@@ -1,5 +1,3 @@
-import re
-
 from sqlalchemy import schema, types, pool
 from sqlalchemy.engine import default, reflection
 from sqlalchemy.sql import compiler
@@ -50,7 +48,7 @@ class DremioCompiler(compiler.SQLCompiler):
     def visit_table(self, table, asfrom=False, **kwargs):
 
         if asfrom:
-            if table.schema != None and table.schema != "":
+            if table.schema is not None and table.schema != "":
                 fixed_schema = ".".join(["\"" + i.replace('"', '') + "\"" for i in table.schema.split(".")])
                 fixed_table = fixed_schema + ".\"" + table.name.replace("\"", "") + "\""
             else:
@@ -212,7 +210,7 @@ class DremioDialect_flight(default.DefaultDialect):
 
     def get_columns(self, connection, table_name, schema, **kw):
         sql = "DESCRIBE \"{0}\"".format(table_name)
-        if schema != None and schema != "":
+        if schema is not None and schema != "":
             sql = "DESCRIBE \"{0}\".\"{1}\"".format(schema, table_name)
         cursor = connection.execute(sql)
         result = []
