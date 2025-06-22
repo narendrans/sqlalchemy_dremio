@@ -41,3 +41,8 @@ def init_test_schema(request):
             conn.execute(text('DROP TABLE IF EXISTS "$scratch"."sqlalchemy_tests"'))
 
     request.addfinalizer(fin)
+
+@pytest.fixture(scope="session")
+def engine():
+    """Re-export the session-wide engine for tests that need it."""
+    return get_engine()
