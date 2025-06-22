@@ -1,4 +1,4 @@
-__version__ = '3.0.2'
+__version__ = '3.0.4'
 
 from .db import Connection, connect
 from sqlalchemy.dialects import registry
