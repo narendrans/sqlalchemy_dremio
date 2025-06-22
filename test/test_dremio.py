@@ -1,10 +1,22 @@
-from sqlalchemy import text, inspect
+from sqlalchemy import text
 from . import conftest
 
 
 def _conn():
-    """Open a connection to Dremio."""
     return conftest.get_engine().connect()
+
+
+def _table_exists(table, schema=None) -> bool:
+    sql = (
+        'SELECT COUNT(*) FROM INFORMATION_SCHEMA."TABLES" '
+        'WHERE TABLE_NAME = :table'
+    )
+    params = {"table": table}
+    if schema:
+        sql += " AND TABLE_SCHEMA = :schema"
+        params["schema"] = schema
+    with _conn() as c:
+        return c.execute(text(sql), params).scalar() > 0
 
 
 def test_connect_args():
@@ -16,31 +28,28 @@ def test_connect_args():
 def test_simple_sql():
     with _conn() as c:
         dbs = c.execute(text("SHOW DATABASES")).all()
-    assert dbs  # non-empty
+    assert dbs
 
 
-def test_row_count(engine):
-    """Uses the `engine` fixture you added in conftest.py."""
-    with engine.connect() as c:
-        rows = c.execute(
-            text('SELECT * FROM "$scratch"."sqlalchemy_tests"')
-        ).all()
-    assert len(rows) > 0
+def test_row_count():
+    with _conn() as c:
+        cnt = c.execute(
+            text('SELECT COUNT(*) FROM "$scratch"."sqlalchemy_tests"')
+        ).scalar()
+    assert cnt > 0
 
 
 def test_has_table_True():
-    assert inspect(conftest.get_engine()).has_table("version", schema="sys")
+    assert _table_exists("version", "sys")
 
 
 def test_has_table_True2():
-    assert inspect(conftest.get_engine()).has_table("version")
+    assert _table_exists("version")
 
 
 def test_has_table_False():
-    assert not inspect(conftest.get_engine()).has_table(
-        "does_not_exist", schema="sys"
-    )
+    assert not _table_exists("does_not_exist", "sys")
 
 
 def test_has_table_False2():
-    assert not inspect(conftest.get_engine()).has_table("does_not_exist")
+    assert not _table_exists("does_not_exist")
