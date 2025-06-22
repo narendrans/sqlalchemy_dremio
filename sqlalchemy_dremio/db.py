@@ -183,7 +183,15 @@ class Cursor(object):
         return self
 
     @check_closed
-    def executemany(self, query):
+    def executemany(self, query, seq_of_parameters=None):
+        """Compatibility wrapper for DBAPI executemany.
+
+        ``df.to_sql`` and other helpers expect the ``executemany`` method to
+        accept the SQL statement and a sequence of parameters.  Dremio does not
+        support parameterized execution, so this method simply raises a
+        ``NotSupportedError`` regardless of the parameters passed.
+        """
+
         raise NotSupportedError(
             '`executemany` is not supported, use `execute` instead')
 
