@@ -2,7 +2,7 @@
 
 
 ![PyPI](https://img.shields.io/pypi/v/sqlalchemy_dremio.svg)
-![Build](https://github.com/narendrans/sqlalchemy_dremio/workflows/Build/badge.svg)
+![CI](https://github.com/narendrans/sqlalchemy_dremio/actions/workflows/dremio.yml/badge.svg)
 
 A SQLAlchemy dialect for Dremio via ODBC and Flight interfaces.
 
@@ -48,7 +48,7 @@ Schema - (Optional) The schema to use
 TLS:
 
 UseEncryption=true|false - (Optional) Enables TLS connection. Must be enabled on Dremio to use it.
-DisableCertificateVerification=true|false - (Optional) Disables certificate verirication.
+DisableCertificateVerification=true|false - (Optional) Disables certificate verification.
 
 WLM:
 
@@ -56,7 +56,7 @@ https://docs.dremio.com/software/advanced-administration/workload-management/#qu
 
 
 routing_queue - (Optional) The queue in which queries should run
-routing_tag - (Optonal) Routing tag to use.
+routing_tag - (Optional) Routing tag to use.
 routing_engine - (Optional) The engine in which the queries should run
 
 Testing
@@ -71,6 +71,7 @@ pytest
 ```
 
 The workflow in `.github/workflows/dremio.yml` demonstrates how to run these tests automatically on GitHub Actions.
+The CI badge at the top of this file shows the current test status.
 
 Superset Integration
 -------------
