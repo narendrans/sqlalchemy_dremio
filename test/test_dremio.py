@@ -4,7 +4,11 @@ from . import conftest
 
 
 def _conn():
-    return conftest.get_engine().connect()
+    engine = conftest.get_engine()
+    if engine is None:
+        import pytest
+        pytest.skip("DREMIO_CONNECTION_URL not set")
+    return engine.connect()
 
 
 def _quote(ident: str) -> str:

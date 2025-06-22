@@ -20,7 +20,6 @@ Linux/macOS: export DREMIO_CONNECTION_URL="dremio+flight://dremio:dremio123@loca
 def get_engine():
     url = os.getenv("DREMIO_CONNECTION_URL")
     if not url:
-        _help()
         return None
     return create_engine(url, future=True)          # future-style API
 
@@ -28,7 +27,7 @@ def get_engine():
 def init_test_schema(request):
     engine = get_engine()
     if engine is None:
-        pytest.skip("DREMIO_CONNECTION_URL not set")
+        return
 
     sql = Path("scripts/sample.sql").read_text()
 
@@ -37,6 +36,8 @@ def init_test_schema(request):
         conn.execute(text(sql))
 
     def fin():
+        if engine is None:
+            return
         with engine.begin() as conn:
             conn.execute(text('DROP TABLE IF EXISTS "$scratch"."sqlalchemy_tests"'))
 
