@@ -1,6 +1,6 @@
 # test/test_dremio.py
 from sqlalchemy import text, inspect
-import conftest
+from . import conftest
 
 def _conn():
     return conftest.get_engine().connect()
