@@ -1,3 +1,4 @@
+# test/test_dremio.py
 from sqlalchemy import text
 from . import conftest
 
@@ -6,22 +7,31 @@ def _conn():
     return conftest.get_engine().connect()
 
 
-def _table_exists(table, schema=None) -> bool:
-    sql = (
-        'SELECT COUNT(*) FROM INFORMATION_SCHEMA."TABLES" '
-        'WHERE TABLE_NAME = :table'
-    )
-    params = {"table": table}
+def _quote(ident: str) -> str:
+    """Minimal quoting to prevent breaking the INFORMATION_SCHEMA query."""
+    return ident.replace('"', '""')
+
+
+def _table_exists(table: str, schema: str | None = None) -> bool:
+    tbl = _quote(table)
     if schema:
-        sql += " AND TABLE_SCHEMA = :schema"
-        params["schema"] = schema
+        sch = _quote(schema)
+        sql = (
+            'SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA."TABLES" '
+            f"WHERE TABLE_NAME = '{tbl}' AND TABLE_SCHEMA = '{sch}'"
+        )
+    else:
+        sql = (
+            'SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA."TABLES" '
+            f"WHERE TABLE_NAME = '{tbl}'"
+        )
     with _conn() as c:
-        return c.execute(text(sql), params).scalar() > 0
+        return c.execute(text(sql)).fetchone()[0] > 0
 
 
 def test_connect_args():
     with _conn() as c:
-        version = c.execute(text("SELECT version FROM sys.version")).scalar()
+        version = c.execute(text("SELECT version FROM sys.version")).fetchone()[0]
     assert version
 
 
@@ -35,7 +45,7 @@ def test_row_count():
     with _conn() as c:
         cnt = c.execute(
             text('SELECT COUNT(*) FROM "$scratch"."sqlalchemy_tests"')
-        ).scalar()
+        ).fetchone()[0]
     assert cnt > 0
 
 
