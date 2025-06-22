@@ -12,6 +12,8 @@ jobs:
     services:
       dremio:
         image: dremio/dremio-oss:latest
+        env:
+          DREMIO_JAVA_EXTRA_OPTS: "-Ddebug.addDefaultUser=true"
         ports:
           - 9047:9047
           - 31010:31010
@@ -32,6 +34,8 @@ jobs:
             if [ $? -eq 0 ]; then break; fi
             sleep 5
           done
+      - name: Install dialect
+        run: pip install -e .
       - name: Run tests
         env:
           DREMIO_CONNECTION_URL: dremio+flight://dremio:dremio123@localhost:32010/dremio?UseEncryption=false
