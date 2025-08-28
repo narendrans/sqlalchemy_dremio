@@ -81,6 +81,11 @@ The ODBC connection to superset is now deprecated. Please update sqlalchemy_drem
 Release Notes
 -------------
 
+3.0.5
+-----
+- Add dependency markers for compatibility with Python 3.8.
+- Addressing issue #44: Add support for type `datetime[ms]`.
+
 3.0.4
 -----
 - Addressing issue #34 and #37: Add driver name to dialects
