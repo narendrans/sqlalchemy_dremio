@@ -9,7 +9,7 @@ with open('README.md') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'SQLAlchemy~=2.0.41',
+    'sqlalchemy>=1.3.24,<2',
     'pyarrow~=20.0.0'
 ]
 
